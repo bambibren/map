@@ -6,6 +6,7 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
     <title>鼠标拾取地图坐标</title>
     <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css"/>
     <script type="text/javascript" src="https://cache.amap.com/lbs/static/addToolbar.js"></script>
 </head>
 <style type="text/css">
@@ -20,8 +21,51 @@
         float: left;
     }
 </style>
+<style type="text/css">
+    #panel {
+        position: absolute;
+        background-color: white;
+        max-height: 90%;
+        overflow-y: auto;
+        top: 10px;
+        right: 10px;
+        width: 280px;
+    }
+</style>
+<style>
+    .input-search{
+        background-color: #fff;
+        background-clip: border-box;
+        border-radius: .25rem;
+        border-width: 0;
+        border-radius: 0.4rem;
+        box-shadow: 0 2px 6px 0 rgba(114, 124, 245, .5);
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        padding: 0.75rem 1.25rem;
+    }
+    .input-search input {
+        width: calc(100% - 5rem);
+    }
+    .input-search button {
+        background: #478ff4;
+        color: #fff;
+        width: 4rem;
+        float: right;
+        height: 100%;
+        line-height: 23px;
+    }
+</style>
 <body>
 <div id="container" class="map"></div>
+<div id="panel"></div>
+<div class="input-search">
+    <input id="search" type="text"> <button onclick="search()">搜索</button>
+</div>
 <div class="input-card">
     <h4>左击获取经纬度：</h4>
     <div class="input-item">
@@ -34,10 +78,41 @@
     var map = new AMap.Map("container", {
         resizeEnable: true
     });
+    let lnglat = document.getElementById("lnglat");
+
     //为地图注册click事件获取鼠标点击出的经纬度坐标
-    map.on('click', function(e) {
-        document.getElementById("lnglat").value = e.lnglat.getLng() + ',' + e.lnglat.getLat()
+    map.on('click', (e) => {
+        lnglat.value = e.lnglat.getLng() + ',' + e.lnglat.getLat()
     });
+
+    function search() {
+        AMap.service(["AMap.PlaceSearch"], function() {
+            //构造地点查询类
+            var placeSearch = new AMap.PlaceSearch({ 
+                pageSize: 5, // 单页显示结果条数
+                pageIndex: 1, // 页码
+                // city: "010", // 兴趣点城市
+                // citylimit: true,  //是否强制限制在设置的城市内搜索
+                map: map, // 展现结果的地图实例
+                // panel: "panel", // 结果列表将在此容器中进行展示。
+                autoFitView: true // 是否自动调整地图视野使绘制的 Marker点都处于视口的可见范围
+            });
+
+            //点击地图上的点标记
+
+            AMap.event.addListener(placeSearch, "markerClick", function(e) {
+                lnglat.value = e.data.location.lng +',' + e.data.location.lat;
+            //     console.log(e.data.location);//当前marker的经纬度信息
+            //     console.log(e.data.location.lng +',' + e.data.location.lat);
+            //     console.log(e.data.address);//获取当前marker的具体地址信息
+            //     console.log(e.data);//则是包含所有的marker数据
+
+            });
+            //关键字查询
+            let keyword = document.querySelector('#search').value;
+            placeSearch.search(keyword);
+        });
+    }
 </script>
 </body>
 </html>
